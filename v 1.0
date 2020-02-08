@@ -1,0 +1,637 @@
+from tkinter import *
+from PIL import Image,ImageTk
+import pymongo
+
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["library"]
+c_book = db["book"]
+c_user = db["user"]
+
+root = Tk()
+root.title("BURJ   BLAH   BOOK   HOUSE")
+root.geometry("600x600")
+
+bg_label = Label(root,bg="#2C3335")
+bg_label.place(relheight=1,relwidth=1)
+
+frame = Frame(root,bg="#6A89CC")
+frame.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+
+
+# add new book data to database
+
+def new_book_create () :
+
+    name = name_nb_e.get()
+    author = author_nb_e.get()
+    b_id = b_id_nb_e.get()
+
+    c_book.insert_one({"name":name,"author":author,"b_id":b_id,"userid":0})
+    
+    name_nb_e.delete(0,END)
+    author_nb_e.delete(0,END)
+    b_id_nb_e.delete(0,END)
+
+
+
+
+# new book
+
+def new_book_fun () :
+    
+    frame_new_book = Frame(root,bg="#C479E1")
+    frame_new_book.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    global name_nb_e,author_nb_e,b_id_nb_e
+    
+    b_id_l = Label(frame_new_book,text="BOOK\nNAME",bg="#980E7D",font=("acme",10))
+    b_id_l.place(relx=0.06 ,rely=0.32 ,relheight=0.19 ,relwidth=0.2)
+
+    name_nb_e = Entry(frame_new_book,bg="#953BA8",font=("acme",15),justify=CENTER)
+    name_nb_e.place(relx=0.35 ,rely=0.32 ,relheight=0.19 ,relwidth=0.58)
+
+    author_l = Label(frame_new_book,text="AUTHOR",bg="#980E7D",font=("acme",10))
+    author_l.place(relx=0.06 ,rely=0.56 ,relheight=0.19 ,relwidth=0.2)
+
+    author_nb_e = Entry(frame_new_book,bg="#953BA8",font=("acme",15),justify=CENTER)
+    author_nb_e.place(relx=0.35 ,rely=0.56 ,relheight=0.19 ,relwidth=0.58)
+
+    b_id_l = Label(frame_new_book,text="BOOK ID",bg="#980E7D",font=("acme",10))
+    b_id_l.place(relx=0.06 ,rely=0.08 ,relheight=0.19 ,relwidth=0.2)
+
+    b_id_nb_e = Entry(frame_new_book,bg="#953BA8",font=("acme",15),justify=CENTER)
+    b_id_nb_e.place(relx=0.35 ,rely=0.08 ,relheight=0.19 ,relwidth=0.58)
+
+    submit_b = Button(frame_new_book,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=new_book_create)
+    submit_b.place(relx=0.73 ,rely=0.83 ,relheight=0.1 ,relwidth=0.2 )
+
+    back_b = Button(frame_new_book,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=book)
+    back_b.place(relx=0.06 ,rely=0.83 ,relheight=0.08 ,relwidth=0.2 )
+
+    
+
+
+
+# get old book data from database
+
+def old_book_info () :
+    
+    data = c_book.find_one({"b_id":b_id_ob_e.get()})
+
+    if data :
+
+        text_temp = "BOOK ID   :   "+data["b_id"] +"\n"+ "Book Name   :   "+data["name"] +"\n"+ "Author   :   "+data["author"] +"\n"
+
+        if data["userid"] == 0 :
+            text_final = text_temp+ "\nBOOK NOT ISSUED"
+
+            data_l = Label(frame_old_book,bg="#CDADE6",font=("acme",20),text=text_final,justify=CENTER)
+            data_l.place(relx=0.06 ,rely=0.32 ,relheight=0.6 ,relwidth=0.88)
+
+        else :
+            user_d = c_user.find_one({"_id":data["userid"]})
+
+            text_user = "User Name  :  "+user_d["name"] + "\n" +"User ID :  "+user_d["u_id"]
+
+            text_final = text_temp + "\n- BOOK ISSUED TO -\n\n" + text_user
+
+            data_l = Label(frame_old_book,bg="#CDADE6",font=("acme",16),text=text_final,justify=CENTER)
+            data_l.place(relx=0.06 ,rely=0.32 ,relheight=0.6 ,relwidth=0.88)
+
+    else :
+
+        data_l = Label(frame_old_book,bg="#CDADE6",font=("acme",20),text="~~~~  BOOK  NOT  FOUND  ~~~~",justify=CENTER)
+        data_l.place(relx=0.06 ,rely=0.32 ,relheight=0.6 ,relwidth=0.88)
+
+
+
+
+
+
+# old book
+
+def old_book_fun () :
+    
+    global frame_old_book,b_id_ob_e
+
+    frame_old_book = Frame(root,bg="#C479E1")
+    frame_old_book.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95) 
+
+    b_id_l = Label(frame_old_book,text="BOOK\nID",bg="#980E7D",font=("acme",10))
+    b_id_l.place(relx=0.06 ,rely=0.06 ,relheight=0.1 ,relwidth=0.2)
+
+    b_id_ob_e = Entry(frame_old_book,bg="#953BA8",font=("acme",15),justify=CENTER)
+    b_id_ob_e.place(relx=0.31 ,rely=0.06 ,relheight=0.1 ,relwidth=0.64)
+
+    submit_b = Button(frame_old_book,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_book_info)
+    submit_b.place(relx=0.6 ,rely=0.2 ,relheight=0.08 ,relwidth=0.2 )
+
+    back_b = Button(frame_old_book,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=book,justify=CENTER)
+    back_b.place(relx=0.2 ,rely=0.2 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+
+# add new user data to database
+
+def new_user_create () :
+
+    c_user.insert_one({"name":name_nu_e.get(),"u_id":uid_nu_e.get(),"age":age_nu_e.get(),"class":class_nu_e.get(),"pwd":pwd_nu_e.get(),"bookid":0}) 
+    
+    name_nu_e.delete(0,END)
+    uid_nu_e.delete(0,END)
+    age_nu_e.delete(0,END)
+    class_nu_e.delete(0,END)
+    pwd_nu_e.delete(0,END)
+
+
+
+# new user
+
+def new_user_fun () :
+    
+    frame_new_user = Frame(root,bg="#C479E1")
+    frame_new_user.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+    
+    global name_nu_e,uid_nu_e,age_nu_e,class_nu_e,pwd_nu_e
+
+    b_id_l = Label(frame_new_user,text="NAME",bg="#980E7D",font=("acme",10))
+    b_id_l.place(relx=0.06 ,rely=0.05 ,relheight=0.13 ,relwidth=0.18)
+    
+    name_nu_e = Entry(frame_new_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    name_nu_e.place(relx=0.33 ,rely=0.05 ,relheight=0.13 ,relwidth=0.58)
+
+    uid_l = Label(frame_new_user,text="USER ID",bg="#980E7D",font=("acme",10))
+    uid_l.place(relx=0.06 ,rely=0.21 ,relheight=0.13 ,relwidth=0.18)
+
+    uid_nu_e = Entry(frame_new_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    uid_nu_e.place(relx=0.33 ,rely=0.21 ,relheight=0.13 ,relwidth=0.58)
+
+    age_l = Label(frame_new_user,text="AGE",bg="#980E7D",font=("acme",10))
+    age_l.place(relx=0.06 ,rely=0.37 ,relheight=0.13 ,relwidth=0.18)
+
+    age_nu_e = Entry(frame_new_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    age_nu_e.place(relx=0.33 ,rely=0.37 ,relheight=0.13 ,relwidth=0.58)
+
+    class_l = Label(frame_new_user,text="CLASS",bg="#980E7D",font=("acme",10))
+    class_l.place(relx=0.06 ,rely=0.53 ,relheight=0.13 ,relwidth=0.18)
+
+    class_nu_e = Entry(frame_new_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    class_nu_e.place(relx=0.33 ,rely=0.53 ,relheight=0.13 ,relwidth=0.58)
+
+    pwd_l = Label(frame_new_user,text="PASSWORD",bg="#980E7D",font=("acme",10))
+    pwd_l.place(relx=0.06 ,rely=0.69 ,relheight=0.13 ,relwidth=0.18)
+
+    pwd_nu_e = Entry(frame_new_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    pwd_nu_e.place(relx=0.33 ,rely=0.69 ,relheight=0.13 ,relwidth=0.58)
+
+    submit_b = Button(frame_new_user,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=new_user_create)
+    submit_b.place(relx=0.73 ,rely=0.87 ,relheight=0.08 ,relwidth=0.2 )
+
+    back_b = Button(frame_new_user,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=user)
+    back_b.place(relx=0.04 ,rely=0.87 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+
+# issue book , update information , return book for old user
+
+def old_user_final () :
+
+    final_user_frame = Frame(root,bg="#E1D679")
+    final_user_frame.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    data = c_user.find_one({"u_id":uid_ou_e.get()})
+
+    text_disp = data["name"] +"  /  "+ data["u_id"]
+
+    name_tag = Label(final_user_frame,text=text_disp,bg="#E1D679",font=("acme",20),justify=CENTER)
+    name_tag.place(relx=0 ,rely=0.1 ,relheight=0.2 ,relwidth=1 )
+
+
+
+    def user_lib (i) :
+
+        user_lib_frame = Frame(root,bg="#ADE880")
+        user_lib_frame.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+        if i == 1 :
+
+            data = c_user.find_one({"u_id":uid_ou_e.get()})
+
+
+            if data["bookid"] :
+
+                book_d = c_book.find_one({"_id":data["bookid"]})
+
+                text_b = "Book Name  :  "+book_d["name"] +"\n"+ "Author  :  "+book_d["author"]
+                text_final = "~~~ RETURN PREVIOUS BOOK ~~~\n\n" + text_b
+
+                back_l = Label(user_lib_frame,text=text_final,font=("acme",18),justify=CENTER,bg="#07C213")
+                back_l.place(relx=0.1 ,rely=0.15 ,relheight=0.8 ,relwidth=0.8)
+
+                back_b = Button(user_lib_frame,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+                back_b.place(relx=0.75 ,rely=0.03 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+            else :
+
+                b_id_tag = Label(user_lib_frame,text="BOOK  ID",font=("acme",12),bg="#29A54C")
+                b_id_tag_e = Entry(user_lib_frame,font=("acme",15),bg="#29A54C",justify=CENTER) 
+                
+                b_id_tag.place(relx=0.06 ,rely=0.07 ,relheight=0.13 ,relwidth=0.24)
+                b_id_tag_e.place(relx=0.34 ,rely=0.07 ,relheight=0.13 ,relwidth=0.6)
+
+                def issue_book () :
+
+                    data = c_user.find_one({"u_id":uid_ou_e.get()})
+                    book_d = c_book.find_one({"b_id":b_id_tag_e.get()})
+
+                    if book_d :
+                        
+                        if  not(book_d["userid"]) :
+                            
+                            c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"bookid":book_d["_id"]}})
+                            c_book.update_one({"b_id":b_id_tag_e.get()},{"$set":{"userid":data["_id"]}})
+
+                            back_l = Label(user_lib_frame,text="~~~  BOOK  ISSUED  ~~~",font=("acme",20),justify=CENTER,bg="#ADE880")
+                            back_l.place(relx=0.06 ,rely=0.45 ,relheight=0.5 ,relwidth=0.88)
+
+                            submit_b = Button(user_lib_frame,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",state=DISABLED)
+                            submit_b.place(relx=0.7 ,rely=0.27 ,relheight=0.08 ,relwidth=0.2 )
+
+
+                        else :
+                            
+                            back_l = Label(user_lib_frame,text="~~~  BOOK  IS  ~~~\n~~~  ALREADY ISSUED  ~~~",font=("acme",20),justify=CENTER,bg="#ADE880")
+                            back_l.place(relx=0.06 ,rely=0.45 ,relheight=0.5 ,relwidth=0.88)
+                        
+
+                    else :
+
+                        back_l = Label(user_lib_frame,text="~~~  BOOK  NOT  FOUND  ~~~",font=("acme",20),justify=CENTER,bg="#ADE880")
+                        back_l.place(relx=0.06 ,rely=0.45 ,relheight=0.5 ,relwidth=0.88)
+
+                submit_b = Button(user_lib_frame,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=issue_book)
+                submit_b.place(relx=0.7 ,rely=0.27 ,relheight=0.08 ,relwidth=0.2 )
+
+                back_b = Button(user_lib_frame,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+                back_b.place(relx=0.1 ,rely=0.27 ,relheight=0.08 ,relwidth=0.2 )
+
+                
+
+        elif i == 2 :
+
+            data = c_user.find_one({"u_id":uid_ou_e.get()})
+
+            if data["bookid"] :
+
+                c_book.update_one({"_id":data["bookid"]},{"$set":{"userid":0}})
+                c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"bookid":0}})
+
+                back_l = Label(user_lib_frame,text="~~~  BOOK  ~~~\n~~~  RETURNED  ~~~",font=("acme",20),justify=CENTER,bg="#ADE880")
+                back_l.place(relx=0.1 ,rely=0.1 ,relheight=0.8 ,relwidth=0.8)
+
+                back_b = Button(user_lib_frame,text="BACK",font=("acme",10),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+                back_b.place(relx=0.75 ,rely=0.03 ,relheight=0.08 ,relwidth=0.2 )
+
+            else :
+
+                back_l = Label(user_lib_frame,text="~~~  NO BOOK  ~~~\n\n~  ISSUED  ~",font=("acme",20),justify=CENTER,bg="#ADE880")
+                back_l.place(relx=0.1 ,rely=0.1 ,relheight=0.8 ,relwidth=0.8)
+
+                back_b = Button(user_lib_frame,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+                back_b.place(relx=0.75 ,rely=0.03 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+        elif i == 3 :
+
+            drop_op = StringVar()
+
+            option = ["NAME","AGE","CLASS","PASSWORD","DELETE"]
+            drop_down = OptionMenu(user_lib_frame,drop_op,*option) 
+            drop_down.config(bg="#4A8855",activebackground="#68C9BB",fg="yellow",font=("acme",15))
+            drop_down.place(relx=0.05,rely=0.05,relheight=0.12,relwidth=0.9)
+            drop_op.set("CHOOSE OPTION")
+
+
+            def update_user (opt) :
+
+                back_l = Label(user_lib_frame,font=("acme",20),bg="#ADE880",justify=CENTER)
+                back_l.place(relx=0  ,rely=0.4 ,relheight=0.6 ,relwidth=1)
+
+                if opt == "NAME" :
+
+                    new_b_id_l = Label(user_lib_frame,text="NEW NAME",font=("acme",12),bg="#A3BF30")
+                    new_b_id_l.place(relx=0.05 ,rely=0.4 ,relheight=0.1 ,relwidth=0.25)
+
+                    new_name_e = Entry(user_lib_frame,font=("acme",18),justify=CENTER,bg="#92D11C")
+                    new_name_e.place(relx=0.35 ,rely=0.4 ,relheight=0.1 ,relwidth=0.6)
+
+                    def update_name () :
+                        c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"name":new_name_e.get()}})
+                        change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",state=DISABLED)
+
+                        back_l = Label(user_lib_frame,text="~~~  NEW   NAME  ~~~\n~~~  UPDATED  ~~~",font=("acme",20),bg="#ADE880",justify=CENTER)
+                        back_l.place(relx=0  ,rely=0.55 ,relheight=0.35 ,relwidth=1)
+
+                    change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",activebackground="#1EAB24",command=update_name)
+                    change_e.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+
+                
+                elif opt == "AGE" :
+
+                    new_age_l = Label(user_lib_frame,text="NEW AGE",font=("acme",12),bg="#A3BF30")
+                    new_age_l.place(relx=0.05 ,rely=0.4 ,relheight=0.1 ,relwidth=0.25)
+
+                    new_age_e = Entry(user_lib_frame,font=("acme",20),justify=CENTER,bg="#92D11C")
+                    new_age_e.place(relx=0.35 ,rely=0.4 ,relheight=0.1 ,relwidth=0.6)
+
+                    def update_age () :
+                        c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"age":new_age_e.get()}})
+                        change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",state=DISABLED)
+
+                        back_l = Label(user_lib_frame,text="~~~  NEW   AGE  ~~~\n~~~  UPDATED  ~~~",font=("acme",20),bg="#ADE880",justify=CENTER)
+                        back_l.place(relx=0  ,rely=0.55 ,relheight=0.35 ,relwidth=1)
+
+                    change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",activebackground="#1EAB24",command=update_age)
+                    change_e.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+                        
+
+
+                elif opt == "CLASS" :
+
+                    new_class_l = Label(user_lib_frame,text="NEW CLASS",font=("acme",12),bg="#A3BF30")
+                    new_class_l.place(relx=0.05 ,rely=0.4 ,relheight=0.1 ,relwidth=0.25)
+
+                    new_class_e = Entry(user_lib_frame,font=("acme",20),justify=CENTER,bg="#92D11C")
+                    new_class_e.place(relx=0.35 ,rely=0.4 ,relheight=0.1 ,relwidth=0.6)
+
+                    def update_class () :
+                        c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"class":new_class_e.get()}})
+                        change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",state=DISABLED)
+
+                        back_l = Label(user_lib_frame,text="~~~  NEW   CLASS  ~~~\n~~~  UPDATED  ~~~",font=("acme",20),bg="#ADE880",justify=CENTER)
+                        back_l.place(relx=0  ,rely=0.55 ,relheight=0.35 ,relwidth=1)
+
+                    change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",activebackground="#1EAB24",command=update_class)
+                    change_e.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+
+
+                elif opt == "PASSWORD" :
+
+                    new_pwd_l = Label(user_lib_frame,text="NEW PASSWORD",font=("acme",11),bg="#A3BF30")
+                    new_pwd_l.place(relx=0.05 ,rely=0.4 ,relheight=0.1 ,relwidth=0.3)
+
+                    new_pwd_e = Entry(user_lib_frame,font=("acme",20),justify=CENTER,bg="#92D11C")
+                    new_pwd_e.place(relx=0.4 ,rely=0.4 ,relheight=0.1 ,relwidth=0.52)
+
+                    def update_pwd () :
+                        c_user.update_one({"u_id":uid_ou_e.get()},{"$set":{"pwd":new_pwd_e.get()}})
+                        change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",state=DISABLED)
+
+                        back_l = Label(user_lib_frame,text="~~~  NEW   PASSWORD  ~~~\n~~~  UPDATED  ~~~",font=("acme",20),bg="#ADE880",justify=CENTER)
+                        back_l.place(relx=0  ,rely=0.55 ,relheight=0.35 ,relwidth=1)
+
+                    change_e = Button(user_lib_frame,text="CHNAGE",font=("acme",12),bg="#A3BF30",activebackground="#1EAB24",command=update_pwd)
+                    change_e.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+
+                
+                elif opt == "DELETE" :
+
+                    verify_pwd_l = Label(user_lib_frame,text="PASSWORD",font=("acme",11),bg="#A3BF30")
+                    verify_pwd_l.place(relx=0.05 ,rely=0.4 ,relheight=0.1 ,relwidth=0.3)
+
+                    verify_pwd_e = Entry(user_lib_frame,font=("acme",20),justify=CENTER,bg="#92D11C")
+                    verify_pwd_e.place(relx=0.4 ,rely=0.4 ,relheight=0.1 ,relwidth=0.52)
+
+
+                    def delete_user () :
+
+                        data_u = c_user.find_one({"u_id":uid_ou_e.get(),"pwd":verify_pwd_e.get()})
+
+                        if data_u :
+
+                            if data_u["bookid"] :
+                                book_d = c_book.update_one({"_id":data_u["bookid"]},{"$set":{"userid":0}})
+                                c_user.delete_one({"u_id":uid_ou_e.get()})
+                                initial()
+
+                            else :
+                                c_user.delete_one({"u_id":uid_ou_e.get()})
+                                initial()
+
+                        else :
+                            back_l = Label(user_lib_frame,text="--  WRONG  PASSWORD  --",font=("acme",20),bg="#ADE880",justify=CENTER)
+                            back_l.place(relx=0  ,rely=0.7 ,relheight=0.2 ,relwidth=1)
+
+
+                    change_e = Button(user_lib_frame,text="DELTE",font=("acme",12),bg="#A3BF30",activebackground="#1EAB24",command=delete_user)
+                    change_e.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+            back_b = Button(user_lib_frame,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+            back_b.place(relx=0.08 ,rely=0.25 ,relheight=0.08 ,relwidth=0.2 )
+
+            submit_b = Button(user_lib_frame,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=lambda:update_user(drop_op.get()),justify=CENTER)
+            submit_b.place(relx=0.77 ,rely=0.25 ,relheight=0.08 ,relwidth=0.2 )
+    
+   
+   
+        elif i == 4 :
+
+            data = c_user.find_one({"u_id":uid_ou_e.get()})
+
+            book_d = c_book.find_one({"_id":data["bookid"]})
+
+            text_1 = "Name  :  "+data["name"] +"\n"+ "User ID  :  "+data["u_id"] +"\n"+ "Class  :  "+data["class"] +"\n"+ "Age  :  "+data["age"]
+
+            if book_d :
+
+                text_2 = "\n\n" + "---  BOOK  ISSUED  ---" +"\n"+ book_d["name"] +"\n"+ "By  -  "+book_d["author"] 
+
+            else :
+
+                text_2 = "\n\n"+ "---  NO  BOOK  ISSUED  ---"
+
+            back_l = Label(user_lib_frame,text=text_1+text_2,font=("acme",20),justify=CENTER,bg="#ADE880")
+            back_l.place(relx=0.1 ,rely=0.1 ,relheight=0.8 ,relwidth=0.8)
+
+            back_b = Button(user_lib_frame,text="BACK",font=("acme",10),bg="#5915A3",activebackground="#7454C3",command=old_user_final,justify=CENTER)
+            back_b.place(relx=0.75 ,rely=0.03 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+
+    issue_b = Button(final_user_frame,text="ISSUE BOOK",bg="#F08155",activebackground="#B62E25",font=("acme",18),command=lambda:user_lib(1))
+    return_b = Button(final_user_frame,text="RETURN BOOK",bg="#F08155",activebackground="#B62E25",font=("acme",17),command=lambda:user_lib(2))
+    update_b = Button(final_user_frame,text="UPDATE INFO",bg="#F08155",activebackground="#B62E25",font=("acme",18),command=lambda:user_lib(3))
+    show_i_b = Button(final_user_frame,text="SHOW INFO",bg="#F08155",activebackground="#B62E25",font=("acme",18),command=lambda:user_lib(4))
+
+    issue_b.place(relx=0.06 ,rely=0.35 ,relheight=0.2 ,relwidth=0.4)
+    return_b.place(relx=0.54 ,rely=0.35 ,relheight=0.2 ,relwidth=0.4)
+    update_b.place(relx=0.06 ,rely=0.65 ,relheight=0.2 ,relwidth=0.4)
+    show_i_b.place(relx=0.54 ,rely=0.65 ,relheight=0.2 ,relwidth=0.4)
+
+    back_b = Button(final_user_frame,text="BACK",font=("acme",12),bg="#F08155",activebackground="#B62E25",command=old_user_fun,justify=CENTER)
+    back_b.place(relx=0.75 ,rely=0.03 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+
+
+# getting old user data from database
+
+def old_user_info () :
+
+    data = c_user.find_one({"u_id":uid_ou_e.get()})
+
+    if data :
+
+        pwd_frame = Frame(root,bg="#CFA0D4")
+        pwd_frame.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+        text_final = "hey !!  " + data["name"]
+
+        name_tag = Label(pwd_frame,text=text_final,bg="#CFA0D4",font=("acme",20),justify=CENTER)
+        name_tag.place(relx=0 ,rely=0 ,relheight=0.2 ,relwidth=1)
+
+        pwd_l = Label(pwd_frame,text="PASSWORD",bg="#980E7D",font=("acme",10))
+        pwd_l.place(relx=0.06 ,rely=0.27 ,relheight=0.13 ,relwidth=0.2)
+
+        pwd_ou_e = Entry(pwd_frame,bg="#953BA8",font=("acme",15),justify=CENTER)
+        pwd_ou_e.place(relx=0.32 ,rely=0.27 ,relheight=0.13 ,relwidth=0.62)
+
+
+        def pwd_checker () :
+            
+            if data["pwd"] == pwd_ou_e.get() :
+
+                old_user_final() 
+
+            else :
+                
+                result_l = Label(pwd_frame,text="WRONG PASSWORD",bg="#CFA0D4",font=("acme",20),justify=CENTER)
+                result_l.place(relx=0 ,rely=0.8 ,relheight=0.1 ,relwidth=1)
+
+
+        submit_b = Button(pwd_frame,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=pwd_checker)
+        submit_b.place(relx=0.6 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 )
+
+        back_b = Button(pwd_frame,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_fun,justify=CENTER)
+        back_b.place(relx=0.2 ,rely=0.55 ,relheight=0.08 ,relwidth=0.2 ) 
+
+    else :
+
+        bg_l = Label(frame_old_user,bg="#CDADE6",text="~~~   USER  NOT  FOUND   ~~~",font=("acme",20),justify=CENTER)
+        bg_l.place(relx=0.06 ,rely=0.5 ,relheight=0.4 ,relwidth=0.88)
+
+
+
+
+
+# old user
+
+def old_user_fun () :
+    
+    global frame_old_user,uid_ou_e
+
+    frame_old_user = Frame(root,bg="#C479E1")
+    frame_old_user.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    uid_l = Label(frame_old_user,text="USER ID",bg="#980E7D",font=("acme",10))
+    uid_l.place(relx=0.06 ,rely=0.05 ,relheight=0.13 ,relwidth=0.2)
+    
+    uid_ou_e = Entry(frame_old_user,bg="#953BA8",font=("acme",15),justify=CENTER)
+    uid_ou_e.place(relx=0.3 ,rely=0.05 ,relheight=0.13 ,relwidth=0.64)
+
+    submit_b = Button(frame_old_user,text="SUBMIT",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=old_user_info)
+    submit_b.place(relx=0.6 ,rely=0.29 ,relheight=0.08 ,relwidth=0.2 )
+
+    back_b = Button(frame_old_user,text="BACK",font=("acme",12),bg="#5915A3",activebackground="#7454C3",command=user,justify=CENTER)
+    back_b.place(relx=0.2 ,rely=0.29 ,relheight=0.08 ,relwidth=0.2 )
+
+
+
+
+# logo location
+
+logo = ImageTk.PhotoImage(Image.open("cultures.png"))
+
+
+
+# intial display
+
+def initial () :
+
+    frame = Frame(root,bg="#6A89CC")
+    frame.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    logo_l = Label (frame,image=logo,justify=CENTER,bg="#6A89CC")
+    logo_l.place(relx=0 ,rely=0 ,relheight=.5 ,relwidth=1)
+
+    logo_t = Label (frame,text="BURJ  BLAH  BOOK  HOUSE",font=("dyuthi",35),justify=CENTER,fg="#0D007E",bg="#6A89CC")
+    logo_t.place(relx=0 ,rely=0.52 ,relheight=.15 ,relwidth=1)
+
+    initial_u = Button(frame,text="USER",font=("acme",20),bg="#558097",activebackground="#67E6DC",command=user)
+    initial_u.place(relx=0.66 ,rely=0.75 ,relheight=0.15 ,relwidth=0.23 )
+
+    initial_b = Button(frame,text="BOOKS",font=("acme",20),bg="#558097",activebackground="#67E6DC",command=book)
+    initial_b.place(relx=0.1 ,rely=0.75 ,relheight=0.15 ,relwidth=0.24 )
+
+    initial_q = Button(frame,text="QUIT",font=("acme",20),bg="#558097",activebackground="#67E6DC",command=root.quit)
+    initial_q.place(relx=0.38 ,rely=0.75 ,relheight=0.15 ,relwidth=0.23 )
+
+
+
+
+# new and old user selection
+
+def user () : 
+
+    frame_user = Frame(root,bg="#EC4849")
+    frame_user.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    new_user = Button(frame_user,text="NEW \nUSER",font=("acme",15),bg="#E59F91",activebackground="#E1CD04",command=new_user_fun,justify=CENTER)
+    new_user.place(relx=0.075 ,rely=0.2 ,relheight=0.2 ,relwidth=0.4 )
+
+    exist_user = Button(frame_user,text="EXISTING \nUSER",font=("acme",15),bg="#E59F91",activebackground="#E1CD04",command=old_user_fun,justify=CENTER)
+    exist_user.place(relx=0.525 ,rely=0.2 ,relheight=0.2 ,relwidth=0.4 )
+
+    back_b = Button(frame_user,text="BACK",font=("acme",12),bg="#E59F91",activebackground="#E1CD04",command=initial,justify=CENTER)
+    back_b.place(relx=0.4 ,rely=0.8 ,relheight=0.1 ,relwidth=0.2 )
+
+
+
+
+
+
+# new and old book selection
+
+def book () :
+    
+    frame_book = Frame(root,bg="#EC4849")
+    frame_book.place(relx=0.025,rely=0.025,relheight=0.95,relwidth=0.95)
+
+    new_book = Button(frame_book,text="NEW \nBOOK",font=("acme",15),bg="#E59F91",activebackground="#E1CD04",command=new_book_fun,justify=CENTER)
+    new_book.place(relx=0.075 ,rely=0.2 ,relheight=0.2 ,relwidth=0.4 )
+
+    exist_book = Button(frame_book,text="EXISTING \nBOOK",font=("acme",15),bg="#E59F91",activebackground="#E1CD04",command=old_book_fun,justify=CENTER)
+    exist_book.place(relx=0.525 ,rely=0.2 ,relheight=0.2 ,relwidth=0.4 )
+
+    back_b = Button(frame_book,text="BACK",font=("acme",12),bg="#E59F91",activebackground="#E1CD04",command=initial,justify=CENTER)
+    back_b.place(relx=0.4 ,rely=0.8 ,relheight=0.1 ,relwidth=0.2 )
+
+
+
+
+
+
+initial()
+
+
+root.mainloop()
